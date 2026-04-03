@@ -1,0 +1,81 @@
+name: Build Installers
+
+on:
+  workflow_dispatch:
+
+jobs:
+  # ─────────────────────────── Windows .exe ───────────────────────────
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Tesseract OCR
+        run: choco install tesseract -y
+
+      - name: Download Chinese language data
+        run: |
+          $tessdata = "C:\Program Files\Tesseract-OCR\tessdata"
+          curl -L -o "$tessdata\chi_sim.traineddata" `
+            https://github.com/tesseract-ocr/tessdata/raw/main/chi_sim.traineddata
+          curl -L -o "$tessdata\eng.traineddata" `
+            https://github.com/tesseract-ocr/tessdata/raw/main/eng.traineddata
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install pyinstaller opencv-python pytesseract pillow
+          pip install tkinterdnd2 || echo "tkinterdnd2 unavailable on Windows, skipping"
+
+      - name: Build Windows .exe
+        run: |
+          pyinstaller --clean VideoFrameExtractor_win.spec
+
+      - name: Upload Windows .exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: VideoScreenshotTool-win
+          path: |
+            dist/VideoFrameExtractor/VideoFrameExtractor.exe
+            dist/VideoFrameExtractor/*.dll
+            dist/VideoFrameExtractor/tessdata/
+          retention-days: 14
+
+  # ─────────────────────────── macOS .app ───────────────────────────
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Tesseract with Chinese
+        run: |
+          brew install tesseract-lang
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install pyinstaller opencv-python pytesseract pillow
+          pip install tkinterdnd2
+
+      - name: Build macOS .app
+        run: |
+          pyinstaller --clean VideoFrameExtractor_mac.spec
+
+      - name: Upload macOS .app
+        uses: actions/upload-artifact@v4
+        with:
+          name: VideoScreenshotTool-mac
+          path: dist/视频截图工具.app
+          retention-days: 14
