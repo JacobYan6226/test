@@ -42,9 +42,8 @@ jobs:
         with:
           name: VideoScreenshotTool-win
           path: |
-            dist/VideoFrameExtractor/VideoFrameExtractor.exe
-            dist/VideoFrameExtractor/*.dll
-            dist/VideoFrameExtractor/tessdata/
+            dist/VideoFrameExtractor.exe
+            dist/*.dll
           retention-days: 14
 
   # ─────────────────────────── macOS .app ───────────────────────────
